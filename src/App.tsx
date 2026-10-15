@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { translations, Language } from './translations';
-import emailjs from '@emailjs/browser';
-import { supabase } from './lib/supabase';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -30,36 +28,20 @@ function App() {
     setIsSubmitting(true);
 
     try {
-      // Save to Supabase database
-      const { error: supabaseError } = await supabase
-        .from('contact_requests')
-        .insert([
-          {
-            name: formData.name,
-            phone: formData.phone,
-            service: formData.service,
-            message: formData.message,
-            status: 'new'
-          }
-        ]);
-
-      if (supabaseError) throw supabaseError;
-
-      // Optional: Also send email via EmailJS
-      // Uncomment and configure if you want email notifications
-      /*
-      const SERVICE_ID = 'YOUR_SERVICE_ID';
-      const TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-      const PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
-
-      await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
-        from_name: formData.name,
-        from_phone: formData.phone,
-        service_type: formData.service,
+      // Save to localStorage for admin panel
+      const newRequest = {
+        id: Date.now().toString(),
+        name: formData.name,
+        phone: formData.phone,
+        service: formData.service,
         message: formData.message,
-        to_email: 'your-email@example.com',
-      }, PUBLIC_KEY);
-      */
+        status: 'new' as const,
+        created_at: new Date().toISOString(),
+      };
+
+      const existingRequests = JSON.parse(localStorage.getItem('shine_cleaning_requests') || '[]');
+      existingRequests.push(newRequest);
+      localStorage.setItem('shine_cleaning_requests', JSON.stringify(existingRequests));
 
       setFormSubmitted(true);
       setFormData({ name: '', phone: '', service: '', message: '' });
