@@ -153,7 +153,12 @@ export const getWorkSamples = (): WorkSample[] => {
 };
 
 export const saveWorkSamples = (samples: WorkSample[]) => {
-  localStorage.setItem(STORAGE_KEYS.WORK_SAMPLES, JSON.stringify(samples));
+  try {
+    localStorage.setItem(STORAGE_KEYS.WORK_SAMPLES, JSON.stringify(samples));
+  } catch (e) {
+    console.error('Storage quota exceeded. Try deleting some samples.', e);
+    alert('فضای ذخیره‌سازی پر است. لطفاً برخی نمونه‌ها را حذف کنید.');
+  }
 };
 
 export const addWorkSample = (sample: Omit<WorkSample, 'id' | 'createdAt'>): WorkSample => {
@@ -180,4 +185,40 @@ export const updateWorkSample = (id: string, updates: Partial<WorkSample>) => {
 export const deleteWorkSample = (id: string) => {
   const samples = getWorkSamples().filter(s => s.id !== id);
   saveWorkSamples(samples);
+};
+
+// File upload helper - converts file to base64
+export const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+// Compress image before saving
+export const compressImage = (base64: string, maxWidth = 800, quality = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+  });
 };

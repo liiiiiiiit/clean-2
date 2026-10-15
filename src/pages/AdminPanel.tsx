@@ -32,6 +32,7 @@ import {
   getServices, saveServices, addService, updateService, deleteService,
   getPricing, savePricing, updatePricingRate,
   getWorkSamples, addWorkSample, updateWorkSample, deleteWorkSample,
+  fileToBase64, compressImage,
   type Service, type PricingRate, type WorkSample
 } from '../lib/dataStore';
 
@@ -121,6 +122,8 @@ export default function AdminPanel() {
   const [showSampleForm, setShowSampleForm] = useState(false);
   const [editingSample, setEditingSample] = useState<WorkSample | null>(null);
   const [sampleForm, setSampleForm] = useState({ title: '', description: '', imageUrl: '', serviceType: '' });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -279,14 +282,51 @@ export default function AdminPanel() {
   };
 
   // Work Sample handlers
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('لطفاً فقط فایل تصویری آپلود کنید');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('حجم فایل نباید بیشتر از 5 مگابایت باشد');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Convert to base64
+      const base64 = await fileToBase64(file);
+      
+      // Compress image
+      const compressed = await compressImage(base64, 1200, 0.8);
+      
+      // Update form and preview
+      setSampleForm({ ...sampleForm, imageUrl: compressed });
+      setImagePreview(compressed);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('خطا در آپلود تصویر. لطفاً دوباره تلاش کنید.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleAddSample = () => {
     if (!sampleForm.title || !sampleForm.description || !sampleForm.imageUrl || !sampleForm.serviceType) {
-      alert('Please fill in all fields');
+      alert('لطفاً تمام فیلدها را پر کنید');
       return;
     }
     addWorkSample(sampleForm);
     setWorkSamples(getWorkSamples());
     setSampleForm({ title: '', description: '', imageUrl: '', serviceType: '' });
+    setImagePreview('');
     setShowSampleForm(false);
   };
 
@@ -1014,24 +1054,24 @@ export default function AdminPanel() {
             {/* Sample Form */}
             {showSampleForm && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingSample ? 'Edit Work Sample' : 'Add New Work Sample'}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingSample ? 'ویرایش نمونه کار' : 'افزودن نمونه کار جدید'}</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">عنوان</label>
                     <input
                       type="text"
                       value={sampleForm.title}
                       onChange={(e) => setSampleForm({ ...sampleForm, title: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
-                      placeholder="e.g., Office Deep Clean"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+                      placeholder="مثال: نظافت عمیق دفتر"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">نوع خدمات</label>
                     <select
                       value={sampleForm.serviceType}
                       onChange={(e) => setSampleForm({ ...sampleForm, serviceType: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
                     >
                       {services.map((s) => (
                         <option key={s.id} value={s.key}>{s.icon} {s.title}</option>
@@ -1039,45 +1079,96 @@ export default function AdminPanel() {
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">توضیحات</label>
                     <textarea
                       value={sampleForm.description}
                       onChange={(e) => setSampleForm({ ...sampleForm, description: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
-                      placeholder="Describe the work done"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+                      placeholder="توضیح کار انجام شده"
                       rows={3}
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">آپلود تصویر</label>
+                    
+                    {/* File Upload Area */}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={uploadingImage}
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                          uploadingImage 
+                            ? 'border-sky-300 bg-sky-50' 
+                            : imagePreview 
+                            ? 'border-green-300 bg-green-50'
+                            : 'border-gray-300 bg-gray-50 hover:border-sky-400 hover:bg-sky-50'
+                        }`}
+                      >
+                        {uploadingImage ? (
+                          <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                            <p className="text-sm text-sky-600 font-medium">در حال آپلود...</p>
+                          </div>
+                        ) : imagePreview ? (
+                          <div className="relative w-full h-full">
+                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                            <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                              <p className="text-white font-medium">کلیک کنید برای تغییر تصویر</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <Image className="w-12 h-12 text-gray-400 mb-3" />
+                            <p className="text-sm text-gray-600 font-medium mb-1">کلیک کنید یا تصویر را بکشید</p>
+                            <p className="text-xs text-gray-500">PNG, JPG, WEBP (حداکثر 5MB)</p>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+
+                    {/* OR divider */}
+                    <div className="flex items-center gap-4 my-4">
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                      <span className="text-sm text-gray-500">یا</span>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                    </div>
+
+                    {/* URL Input */}
                     <input
                       type="url"
-                      value={sampleForm.imageUrl}
-                      onChange={(e) => setSampleForm({ ...sampleForm, imageUrl: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      value={sampleForm.imageUrl.startsWith('data:') ? '' : sampleForm.imageUrl}
+                      onChange={(e) => {
+                        setSampleForm({ ...sampleForm, imageUrl: e.target.value });
+                        setImagePreview(e.target.value);
+                      }}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
                       placeholder="https://example.com/image.jpg"
                     />
-                    {sampleForm.imageUrl && (
-                      <div className="mt-3 aspect-video max-w-sm rounded-xl overflow-hidden bg-gray-100">
-                        <img src={sampleForm.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={editingSample ? handleUpdateSample : handleAddSample}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all"
+                    disabled={uploadingImage}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
-                    {editingSample ? 'Update Sample' : 'Add Sample'}
+                    {editingSample ? 'بروزرسانی نمونه' : 'افزودن نمونه'}
                   </button>
                   <button
-                    onClick={() => { setShowSampleForm(false); setEditingSample(null); }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                    onClick={() => { setShowSampleForm(false); setEditingSample(null); setImagePreview(''); }}
+                    disabled={uploadingImage}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50"
                   >
                     <X className="w-4 h-4" />
-                    Cancel
+                    انصراف
                   </button>
                 </div>
               </div>

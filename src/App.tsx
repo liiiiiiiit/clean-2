@@ -189,9 +189,19 @@ function App() {
 
       {/* Hero Section */}
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
+        {/* Modern gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-white to-blue-50" />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-sky-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-yellow-100/40 rounded-full blur-3xl" />
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-sky-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-br from-yellow-400/20 to-amber-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-sky-300/10 to-blue-400/10 rounded-full blur-3xl" />
+        
+        {/* Modern grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: 'radial-gradient(circle, #0ea5e9 1px, transparent 1px)',
+          backgroundSize: '50px 50px'
+        }} />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -370,41 +380,80 @@ function App() {
 
       {/* Work Samples Section */}
       {workSamples.length > 0 && (
-        <section id="samples" className="py-20 lg:py-28 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="samples" className="py-20 lg:py-28 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-sky-100/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 rounded-full mb-4">
-                <span className="w-2 h-2 bg-sky-500 rounded-full" />
-                <span className="text-sm font-medium text-sky-700">Our Work</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-50 to-blue-50 rounded-full mb-4 border border-sky-100">
+                <span className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium text-sky-700">نمونه کارهای ما</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Work Samples</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">See the quality of our cleaning services through our recent projects.</p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                نمونه کارهای ما
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                کیفیت خدمات نظافتی ما را از طریق پروژه‌های اخیر مشاهده کنید
+              </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {workSamples.map((sample) => {
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {workSamples.map((sample, index) => {
                 const service = services.find(s => s.key === sample.serviceType);
                 return (
-                  <div key={sample.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
-                    <div className="aspect-video overflow-hidden bg-gray-100">
+                  <div 
+                    key={sample.id} 
+                    className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-sky-200"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {/* Image Container with Overlay */}
+                    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                       <img 
                         src={sample.imageUrl} 
                         alt={sample.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" fill="%23f1f5f9"%3E%3Crect width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="18" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" fill="%23f1f5f9"%3E%3Crect width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="18" fill="%2394a3b8"%3Eتصویر موجود نیست%3C/text%3E%3C/svg%3E';
                         }}
                       />
-                    </div>
-                    <div className="p-5">
+                      
+                      {/* Gradient Overlay on Hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      {/* Service Badge */}
                       {service && (
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${service.color} mb-3`}>
-                          <span>{service.icon}</span>
-                          {service.title}
-                        </span>
+                        <div className="absolute top-4 left-4">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm shadow-lg`}>
+                            <span>{service.icon}</span>
+                            <span className="text-gray-700">{service.title}</span>
+                          </span>
+                        </div>
                       )}
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">{sample.title}</h3>
-                      <p className="text-sm text-gray-600">{sample.description}</p>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-sky-600 transition-colors">
+                        {sample.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                        {sample.description}
+                      </p>
+                      
+                      {/* Date */}
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">
+                          {new Date(sample.createdAt).toLocaleDateString('fa-IR')}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-600 group-hover:gap-2 transition-all">
+                          مشاهده جزئیات
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
