@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { translations, Language } from './translations';
-import { supabase } from './lib/supabase';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -29,20 +28,20 @@ function App() {
     setIsSubmitting(true);
 
     try {
-      // Save to Supabase database
-      const { error: supabaseError } = await supabase
-        .from('contact_requests')
-        .insert([
-          {
-            name: formData.name,
-            phone: formData.phone,
-            service: formData.service,
-            message: formData.message,
-            status: 'new'
-          }
-        ]);
+      // Save to localStorage
+      const newRequest = {
+        id: Date.now().toString(),
+        name: formData.name,
+        phone: formData.phone,
+        service: formData.service,
+        message: formData.message,
+        status: 'new' as const,
+        created_at: new Date().toISOString(),
+      };
 
-      if (supabaseError) throw supabaseError;
+      const existingRequests = JSON.parse(localStorage.getItem('shine_requests') || '[]');
+      existingRequests.push(newRequest);
+      localStorage.setItem('shine_requests', JSON.stringify(existingRequests));
 
       setFormSubmitted(true);
       setFormData({ name: '', phone: '', service: '', message: '' });

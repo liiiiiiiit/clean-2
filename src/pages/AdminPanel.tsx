@@ -1,18 +1,38 @@
 import { useState, useEffect } from 'react';
-import { supabase, ContactRequest, isSupabaseConfigured } from '../lib/supabase';
 import { format } from 'date-fns';
 
-type TabType = 'dashboard' | 'requests' | 'settings';
+interface ContactRequest {
+  id: string;
+  name: string;
+  phone: string;
+  service: string;
+  message: string;
+  status: 'new' | 'contacted' | 'completed';
+  created_at: string;
+}
+
+// Simple password (change this!)
+const ADMIN_PASSWORD = 'shine2024';
+
+// LocalStorage helpers
+const getRequests = (): ContactRequest[] => {
+  try {
+    const data = localStorage.getItem('shine_requests');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveRequests = (requests: ContactRequest[]) => {
+  localStorage.setItem('shine_requests', JSON.stringify(requests));
+};
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  
-  // Auth state
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'settings'>('dashboard');
   
   // Requests state
   const [requests, setRequests] = useState<ContactRequest[]>([]);
@@ -24,171 +44,91 @@ export default function AdminPanel() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
-  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    checkAuth();
+    // Check if already logged in
+    const isLoggedIn = sessionStorage.getItem('shine_admin_logged_in');
+    if (isLoggedIn === 'true') {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchRequests();
-      fetchUserEmail();
+      setRequests(getRequests());
     }
   }, [isAuthenticated]);
 
-  // Auto-refresh requests every 5 seconds
+  // Auto-refresh requests
   useEffect(() => {
     if (!isAuthenticated) return;
     
     const interval = setInterval(() => {
-      fetchRequests();
-    }, 5000);
+      setRequests(getRequests());
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, filter]);
+  }, [isAuthenticated]);
 
-  const checkAuth = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUserEmail = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setUserEmail(user.email || '');
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError('');
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
-
-      if (error) throw error;
-
+    if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
-      setLoginEmail('');
-      setLoginPassword('');
-    } catch (error: any) {
-      setLoginError(error.message || 'Failed to login');
-    } finally {
-      setLoading(false);
+      sessionStorage.setItem('shine_admin_logged_in', 'true');
+      setLoginError('');
+      setPassword('');
+    } else {
+      setLoginError('Incorrect password');
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
     setIsAuthenticated(false);
+    sessionStorage.removeItem('shine_admin_logged_in');
     setActiveTab('dashboard');
   };
 
-  const fetchRequests = async () => {
-    try {
-      let query = supabase
-        .from('contact_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setRequests(data || []);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-    }
-  };
-
-  const updateRequestStatus = async (id: string, status: 'new' | 'contacted' | 'completed') => {
-    try {
-      const { error } = await supabase
-        .from('contact_requests')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id);
-
-      if (error) throw error;
-      fetchRequests();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      alert('Failed to update status');
-    }
-  };
-
-  const deleteRequest = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this request?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('contact_requests')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      fetchRequests();
-    } catch (error) {
-      console.error('Error deleting request:', error);
-      alert('Failed to delete request');
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
+  const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordMessage({ type: '', text: '' });
+
+    if (currentPassword !== ADMIN_PASSWORD) {
+      setPasswordMessage({ type: 'error', text: 'Current password is incorrect' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters' });
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       setPasswordMessage({ type: 'error', text: 'New passwords do not match' });
       return;
     }
 
-    if (newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters' });
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
-
-      setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error: any) {
-      setPasswordMessage({ type: 'error', text: error.message || 'Failed to update password' });
-    }
+    // In a real app, you'd save this to a database
+    // For now, we'll just show success
+    setPasswordMessage({ type: 'success', text: 'Password changed successfully! (Note: Update ADMIN_PASSWORD in code)' });
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
-  const filteredRequests = requests.filter(req =>
-    searchQuery === '' ||
-    req.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    req.phone.includes(searchQuery) ||
-    req.message.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const updateStatus = (id: string, status: 'new' | 'contacted' | 'completed') => {
+    const updated = requests.map(req =>
+      req.id === id ? { ...req, status } : req
+    );
+    setRequests(updated);
+    saveRequests(updated);
+  };
 
-  const stats = {
-    total: requests.length,
-    new: requests.filter(r => r.status === 'new').length,
-    contacted: requests.filter(r => r.status === 'contacted').length,
-    completed: requests.filter(r => r.status === 'completed').length,
+  const deleteRequest = (id: string) => {
+    if (!confirm('Are you sure you want to delete this request?')) return;
+    
+    const updated = requests.filter(req => req.id !== id);
+    setRequests(updated);
+    saveRequests(updated);
   };
 
   const getServiceLabel = (service: string): string => {
@@ -201,56 +141,24 @@ export default function AdminPanel() {
     return labels[service] || service;
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const filteredRequests = requests
+    .filter(req => filter === 'all' || req.status === filter)
+    .filter(req =>
+      searchQuery === '' ||
+      req.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      req.phone.includes(searchQuery) ||
+      req.message.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  // Check if Supabase is configured
-  if (!isSupabaseConfigured()) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full border border-red-200">
-          <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">⚠️</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Supabase Not Configured</h1>
-            <p className="text-gray-600">Please set up your Supabase credentials to use the admin panel.</p>
-          </div>
+  const stats = {
+    total: requests.length,
+    new: requests.filter(r => r.status === 'new').length,
+    contacted: requests.filter(r => r.status === 'contacted').length,
+    completed: requests.filter(r => r.status === 'completed').length,
+  };
 
-          <div className="bg-gray-50 rounded-xl p-6 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Setup Instructions:</h3>
-            <ol className="space-y-2 text-sm text-gray-700">
-              <li>1. Create a <code className="bg-gray-200 px-2 py-0.5 rounded">.env</code> file in the root directory</li>
-              <li>2. Add your Supabase credentials:</li>
-            </ol>
-            <div className="mt-3 bg-gray-900 rounded-lg p-4 text-green-400 font-mono text-xs overflow-x-auto">
-              <div>VITE_SUPABASE_URL=your_project_url</div>
-              <div>VITE_SUPABASE_ANON_KEY=your_anon_key</div>
-            </div>
-            <ol start={3} className="space-y-2 text-sm text-gray-700 mt-3">
-              <li>3. Create the database table (see SETUP_GUIDE.md)</li>
-              <li>4. Restart the development server</li>
-            </ol>
-          </div>
-
-          <a href="/" className="block text-center text-sm text-sky-600 hover:text-sky-700">
-            ← Back to Website
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  // Login screen
+  // Login Screen
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center p-4">
@@ -270,49 +178,32 @@ export default function AdminPanel() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition-all"
-                placeholder="admin@shinecleaning.am"
-                required
-                autoFocus
-              />
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter your password"
-                required
+                placeholder="Enter admin password"
+                autoFocus
               />
-            </div>
-
-            {loginError && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                <p className="text-sm text-red-600 flex items-center gap-2">
+              {loginError && (
+                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
                   <span>⚠️</span> {loginError}
                 </p>
-              </div>
-            )}
-
+              )}
+            </div>
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-200 hover:from-sky-600 hover:to-blue-700 transition-all disabled:opacity-50"
+              className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-200 hover:from-sky-600 hover:to-blue-700 transition-all"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              Login
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <a href="/" className="text-sm text-gray-500 hover:text-sky-600 flex items-center gap-1 justify-center">
+          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+            <p className="text-xs text-gray-500 mb-2">Default password: <code className="bg-gray-100 px-2 py-0.5 rounded">shine2024</code></p>
+            <a href="/" className="text-sm text-gray-500 hover:text-sky-600">
               ← Back to Website
             </a>
           </div>
@@ -338,7 +229,9 @@ export default function AdminPanel() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 hidden sm:inline">{userEmail}</span>
+              <a href="/" className="text-sm text-gray-500 hover:text-sky-600 hidden sm:inline">
+                View Website
+              </a>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -443,6 +336,7 @@ export default function AdminPanel() {
                 <div className="p-12 text-center">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">📭</div>
                   <p className="text-gray-500">No requests yet</p>
+                  <p className="text-sm text-gray-400 mt-2">Submit the contact form to see requests here</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -582,7 +476,7 @@ export default function AdminPanel() {
                         <div className="flex flex-col gap-2 items-end">
                           <select
                             value={request.status}
-                            onChange={(e) => updateRequestStatus(request.id, e.target.value as any)}
+                            onChange={(e) => updateStatus(request.id, e.target.value as any)}
                             className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-300 outline-none bg-white"
                           >
                             <option value="new">🔔 New</option>
@@ -612,11 +506,16 @@ export default function AdminPanel() {
 
             {/* Profile Info */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-gray-500">Email</label>
-                  <p className="text-gray-900 font-medium">{userEmail}</p>
+                  <label className="text-sm text-gray-500">Admin Access</label>
+                  <p className="text-gray-900 font-medium">Password Protected</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Data Storage</label>
+                  <p className="text-gray-900 font-medium">Local Browser Storage</p>
+                  <p className="text-xs text-gray-500 mt-1">Requests are stored in your browser. Clear browser data to reset.</p>
                 </div>
               </div>
             </div>
@@ -627,13 +526,25 @@ export default function AdminPanel() {
               
               <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                    placeholder="Enter current password"
+                    required
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
-                    placeholder="Enter new password"
+                    placeholder="Enter new password (min 6 characters)"
                     required
                     minLength={6}
                   />
@@ -670,6 +581,10 @@ export default function AdminPanel() {
                 >
                   Update Password
                 </button>
+
+                <p className="text-xs text-gray-500">
+                  Note: To permanently change the password, update the ADMIN_PASSWORD constant in the code and rebuild.
+                </p>
               </form>
             </div>
           </div>
