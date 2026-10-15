@@ -231,13 +231,11 @@ export default function AdminPanel() {
 
   // Reset to default password
   const handleResetPassword = () => {
-    if (confirm(`Reset password to default "${DEFAULT_PASSWORD}"?`)) {
-      savePassword(DEFAULT_PASSWORD);
-      setPasswordMessage({ type: 'success', text: `Password reset to default: ${DEFAULT_PASSWORD}` });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    }
+    savePassword(DEFAULT_PASSWORD);
+    setPasswordMessage({ type: 'success', text: `Password reset to default: ${DEFAULT_PASSWORD}` });
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   // Service handlers
@@ -262,10 +260,8 @@ export default function AdminPanel() {
   };
 
   const handleDeleteService = (id: string) => {
-    if (confirm('Are you sure you want to delete this service?')) {
-      deleteService(id);
-      setServices(getServices());
-    }
+    deleteService(id);
+    setServices(getServices());
   };
 
   const handleEditService = (service: Service) => {
@@ -346,10 +342,8 @@ export default function AdminPanel() {
   };
 
   const handleDeleteSample = (id: string) => {
-    if (confirm('Are you sure you want to delete this work sample?')) {
-      deleteWorkSample(id);
-      setWorkSamples(getWorkSamples());
-    }
+    deleteWorkSample(id);
+    setWorkSamples(getWorkSamples());
   };
 
   const handleEditSample = (sample: WorkSample) => {
@@ -374,7 +368,6 @@ export default function AdminPanel() {
 
   // Delete request
   const deleteRequest = (id: string) => {
-    if (!confirm('Are you sure you want to delete this request?')) return;
     const updated = requests.filter(req => req.id !== id);
     setRequests(updated);
     saveRequests(updated);
