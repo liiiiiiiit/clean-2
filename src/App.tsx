@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { translations, Language } from './translations';
+import emailjs from '@emailjs/browser';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -9,6 +10,7 @@ function App() {
   const [area, setArea] = useState(50);
   const [showPrice, setShowPrice] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', service: '', message: '' });
 
   const t = translations[lang];
@@ -22,10 +24,33 @@ function App() {
   const pricingRates: Record<string, number> = { office: 500, home: 400, commercial: 350, deep: 800 };
   const calculatedPrice = pricingRates[serviceType] * area;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    setTimeout(() => { setFormSubmitted(false); setFormData({ name: '', phone: '', service: '', message: '' }); }, 4000);
+    setIsSubmitting(true);
+
+    try {
+      // EmailJS configuration - Replace these with your actual values
+      const SERVICE_ID = 'YOUR_SERVICE_ID';
+      const TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+      const PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+        from_name: formData.name,
+        from_phone: formData.phone,
+        service_type: formData.service,
+        message: formData.message,
+        to_email: 'your-email@example.com', // Replace with your email
+      }, PUBLIC_KEY);
+
+      setFormSubmitted(true);
+      setFormData({ name: '', phone: '', service: '', message: '' });
+      setTimeout(() => setFormSubmitted(false), 4000);
+    } catch (error) {
+      console.error('Email send failed:', error);
+      alert('Failed to send message. Please try again or call us directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const navItems = [
@@ -348,8 +373,12 @@ function App() {
                       <option value="deep">{t.contact.selectOptions.deep}</option>
                     </select>
                   </div>
-                  <button type="submit" className="w-full py-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all">
-                    {t.contact.form.submit}
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full py-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? '⏳ Sending...' : t.contact.form.submit}
                   </button>
                 </form>
               )}
