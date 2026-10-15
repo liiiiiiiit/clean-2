@@ -417,8 +417,9 @@ function App() {
               <span className="font-bold">Shine Cleaning</span>
             </div>
             <p className="text-sm text-gray-400">{t.footer.rights}</p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <a href="tel:+37477442554" className="text-gray-400 hover:text-sky-400 transition-colors">📞 +374 77 442554</a>
+              <a href="/admin" className="text-gray-500 hover:text-sky-400 transition-colors text-xs opacity-50 hover:opacity-100">⚙️ Admin</a>
             </div>
           </div>
         </div>
