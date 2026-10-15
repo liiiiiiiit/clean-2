@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { translations, Language } from './translations';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -11,8 +12,21 @@ function App() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', service: '', message: '' });
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const t = translations[lang];
+
+  // Handle hash-based routing for admin panel
+  useEffect(() => {
+    const checkHash = () => {
+      const hash = window.location.hash;
+      setShowAdmin(hash === '#admin');
+    };
+
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -68,6 +82,11 @@ function App() {
     { code: 'ru', label: 'Русский', flag: '🇷🇺' },
   ];
 
+  // Show admin panel if hash is #admin
+  if (showAdmin) {
+    return <AdminPanel />;
+  }
+
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', 'Noto Sans Armenian', sans-serif" }}>
       {/* Header */}
@@ -90,6 +109,9 @@ function App() {
                   {item.label}
                 </a>
               ))}
+              <a href="#admin" className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-sky-600 rounded-lg hover:bg-sky-50 transition-all">
+                Admin Panel
+              </a>
             </nav>
 
             <div className="flex items-center gap-3">
@@ -121,6 +143,9 @@ function App() {
                   {item.label}
                 </a>
               ))}
+              <a href="#admin" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-base font-medium text-gray-600 hover:text-sky-600 rounded-lg hover:bg-sky-50">
+                Admin Panel
+              </a>
             </div>
           </div>
         )}
@@ -401,7 +426,7 @@ function App() {
             <p className="text-sm text-gray-400">{t.footer.rights}</p>
             <div className="flex gap-4 items-center">
               <a href="tel:+37477442554" className="text-gray-400 hover:text-sky-400 transition-colors">📞 +374 77 442554</a>
-              <a href="/admin" className="text-gray-500 hover:text-sky-400 transition-colors text-xs opacity-50 hover:opacity-100">⚙️ Admin</a>
+              <a href="#admin" className="text-gray-400 hover:text-sky-400 transition-colors text-sm">Staff Portal</a>
             </div>
           </div>
         </div>
