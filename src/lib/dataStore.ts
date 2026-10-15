@@ -17,8 +17,16 @@ export interface PricingRate {
 
 export interface WorkSample {
   id: string;
-  title: string;
-  description: string;
+  title: {
+    en: string;
+    hy: string;
+    ru: string;
+  };
+  description: {
+    en: string;
+    hy: string;
+    ru: string;
+  };
   imageUrl: string;
   serviceType: string;
   createdAt: string;

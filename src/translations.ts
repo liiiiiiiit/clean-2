@@ -46,6 +46,12 @@ export const translations = {
       form: { name: 'Your Name', phone: 'Phone Number', service: 'Select Service', submit: 'Send Request', success: 'Thank you! We will contact you shortly.' },
       selectOptions: { office: 'Office Cleaning', home: 'Home Cleaning', commercial: 'Commercial', deep: 'Deep Cleaning' },
     },
+    samples: {
+      title: 'Our Work Samples',
+      subtitle: 'See the quality of our cleaning services through our recent projects',
+      viewDetails: 'View Details',
+      noImage: 'No Image',
+    },
     footer: { rights: '© 2025 Shine Cleaning. All rights reserved.' },
   },
   // Armenian translations
@@ -94,6 +100,12 @@ export const translations = {
       form: { name: '\u0541\u0565\u0580 \u0561\u0576\u0578\u0582\u0576\u0568', phone: '\u0540\u0565\u057c\u0561\u056d\u0578\u057d\u0561\u0570\u0561\u0574\u0561\u0580\u056b \u0570\u0561\u0574\u0561\u0580', service: '\u0538\u0576\u057f\u0580\u0565\u0584 \u056e\u0561\u057c\u0561\u0575\u0578\u0582\u0569\u0575\u0578\u0582\u0576', submit: '\u0548\u0582\u0572\u0561\u0580\u056f\u0565\u056c', success: '\u0547\u0576\u0578\u0580\u0570\u0561\u056f\u0561\u056c\u0578\u0582\u0569\u0575\u0578\u0582\u0576! \u0544\u0565\u0576\u0584 \u056f\u0561\u057a\u057e\u0565\u0576\u0584 \u0571\u0565\u0566 \u0577\u0578\u0582\u057f\u0578\u057e:' },
       selectOptions: { office: '\u0533\u0580\u0561\u057d\u0565\u0576\u0575\u0561\u056f\u056b \u0574\u0561\u0584\u0580\u0578\u0582\u0574', home: '\u054f\u0561\u0576\u056b \u0574\u0561\u0584\u0580\u0578\u0582\u0574', commercial: '\u0531\u057c\u0587\u057f\u0580\u0561\u0575\u056b\u0576', deep: '\u053d\u0578\u0580\u0578\u0582\u0569\u0575\u0561\u0576 \u0574\u0561\u0584\u0580\u0578\u0582\u0574' },
     },
+    samples: {
+      title: '\u0544\u0565\u0580 \u0561\u0577\u056d\u0561\u057f\u0561\u0576\u0584\u056b \u0576\u0574\u0578\u0582\u057d\u0576\u0565\u0580\u0568',
+      subtitle: '\u054f\u0565\u057d\u0565\u0584 \u0574\u0565\u0580 \u0574\u0561\u0584\u0580\u0578\u0582\u0569\u0575\u0561\u0576 \u056e\u0561\u057c\u0561\u0575\u0578\u0582\u0569\u0575\u0578\u0582\u0576\u0576\u0565\u0580\u056b \u0578\u0580\u0561\u056f\u0568 \u0574\u0565\u0580 \u057e\u0565\u0580\u057b\u056b\u0576 \u0576\u0561\u056d\u0561\u0563\u056e\u0565\u0580\u056b \u0574\u056b\u057b\u0578\u0581\u0578\u057e',
+      viewDetails: '\u054f\u0565\u057d\u0576\u0565\u056c \u0574\u0561\u0576\u0580\u0561\u0574\u0561\u057d\u0576\u0565\u0580\u0568',
+      noImage: '\u0546\u056f\u0561\u0580 \u0579\u056f\u0561',
+    },
     footer: { rights: '\u00a9 2025 Shine Cleaning. \u0532\u0578\u056c\u0578\u0580 \u056b\u0580\u0561\u057e\u0578\u0582\u0576\u0584\u0576\u0565\u0580\u0568 \u057a\u0561\u0577\u057f\u057a\u0561\u0576\u057e\u0561\u056e \u0565\u0576:' },
   },
   ru: {
@@ -140,6 +152,12 @@ export const translations = {
       subtitle: 'Или заполните форму ниже.',
       form: { name: 'Ваше имя', phone: 'Номер телефона', service: 'Выберите услугу', submit: 'Отправить', success: 'Спасибо! Мы свяжемся с вами.' },
       selectOptions: { office: 'Уборка офисов', home: 'Уборка домов', commercial: 'Коммерческие', deep: 'Глубокая чистка' },
+    },
+    samples: {
+      title: 'Примеры наших работ',
+      subtitle: 'Оцените качество наших услуг по уборке на примере недавних проектов',
+      viewDetails: 'Подробнее',
+      noImage: 'Нет изображения',
     },
     footer: { rights: '© 2025 Shine Cleaning. Все права защищены.' },
   },

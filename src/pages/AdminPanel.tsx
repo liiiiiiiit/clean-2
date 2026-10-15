@@ -121,9 +121,15 @@ export default function AdminPanel() {
   const [workSamples, setWorkSamples] = useState<WorkSample[]>([]);
   const [showSampleForm, setShowSampleForm] = useState(false);
   const [editingSample, setEditingSample] = useState<WorkSample | null>(null);
-  const [sampleForm, setSampleForm] = useState({ title: '', description: '', imageUrl: '', serviceType: '' });
+  const [sampleForm, setSampleForm] = useState({
+    title: { en: '', hy: '', ru: '' },
+    description: { en: '', hy: '', ru: '' },
+    imageUrl: '',
+    serviceType: ''
+  });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [activeLang, setActiveLang] = useState<'en' | 'hy' | 'ru'>('en');
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -319,13 +325,13 @@ export default function AdminPanel() {
   };
 
   const handleAddSample = () => {
-    if (!sampleForm.title || !sampleForm.description || !sampleForm.imageUrl || !sampleForm.serviceType) {
-      alert('لطفاً تمام فیلدها را پر کنید');
+    if (!sampleForm.title.en || !sampleForm.description.en || !sampleForm.imageUrl || !sampleForm.serviceType) {
+      alert('لطفاً حداقل فیلدهای انگلیسی را پر کنید');
       return;
     }
     addWorkSample(sampleForm);
     setWorkSamples(getWorkSamples());
-    setSampleForm({ title: '', description: '', imageUrl: '', serviceType: '' });
+    setSampleForm({ title: { en: '', hy: '', ru: '' }, description: { en: '', hy: '', ru: '' }, imageUrl: '', serviceType: '' });
     setImagePreview('');
     setShowSampleForm(false);
   };
@@ -336,7 +342,7 @@ export default function AdminPanel() {
     setWorkSamples(getWorkSamples());
     setEditingSample(null);
     setShowSampleForm(false);
-    setSampleForm({ title: '', description: '', imageUrl: '', serviceType: '' });
+    setSampleForm({ title: { en: '', hy: '', ru: '' }, description: { en: '', hy: '', ru: '' }, imageUrl: '', serviceType: '' });
   };
 
   const handleDeleteSample = (id: string) => {
@@ -1041,13 +1047,13 @@ export default function AdminPanel() {
         {activeTab === 'samples' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Work Samples</h2>
+              <h2 className="text-2xl font-bold text-gray-900">نمونه کارها</h2>
               <button
-                onClick={() => { setShowSampleForm(true); setEditingSample(null); setSampleForm({ title: '', description: '', imageUrl: '', serviceType: services[0]?.key || '' }); }}
+                onClick={() => { setShowSampleForm(true); setEditingSample(null); setSampleForm({ title: { en: '', hy: '', ru: '' }, description: { en: '', hy: '', ru: '' }, imageUrl: '', serviceType: services[0]?.key || '' }); }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all"
               >
                 <Plus className="w-4 h-4" />
-                Add Sample
+                افزودن نمونه
               </button>
             </div>
 
@@ -1055,15 +1061,33 @@ export default function AdminPanel() {
             {showSampleForm && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingSample ? 'ویرایش نمونه کار' : 'افزودن نمونه کار جدید'}</h3>
+                
+                {/* Language Tabs */}
+                <div className="flex gap-2 mb-4 border-b border-gray-200">
+                  {(['en', 'hy', 'ru'] as const).map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => setActiveLang(lang)}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 transition-all ${
+                        activeLang === lang
+                          ? 'border-sky-500 text-sky-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {lang === 'en' ? '🇬🇧 English' : lang === 'hy' ? '🇦🇲 Հայերեն' : '🇷🇺 Русский'}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">عنوان</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">عنوان ({activeLang === 'en' ? 'انگلیسی' : activeLang === 'hy' ? 'ارمنی' : 'روسی'})</label>
                     <input
                       type="text"
-                      value={sampleForm.title}
-                      onChange={(e) => setSampleForm({ ...sampleForm, title: e.target.value })}
+                      value={sampleForm.title[activeLang]}
+                      onChange={(e) => setSampleForm({ ...sampleForm, title: { ...sampleForm.title, [activeLang]: e.target.value } })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
-                      placeholder="مثال: نظافت عمیق دفتر"
+                      placeholder={activeLang === 'en' ? 'Example: Office Deep Clean' : activeLang === 'hy' ? 'Օdelays: Գdelays Մdelays' : 'Пример: Глубокая уборка офиса'}
                     />
                   </div>
                   <div>
@@ -1079,12 +1103,12 @@ export default function AdminPanel() {
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">توضیحات</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">توضیحات ({activeLang === 'en' ? 'انگلیسی' : activeLang === 'hy' ? 'ارمنی' : 'روسی'})</label>
                     <textarea
-                      value={sampleForm.description}
-                      onChange={(e) => setSampleForm({ ...sampleForm, description: e.target.value })}
+                      value={sampleForm.description[activeLang]}
+                      onChange={(e) => setSampleForm({ ...sampleForm, description: { ...sampleForm.description, [activeLang]: e.target.value } })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
-                      placeholder="توضیح کار انجام شده"
+                      placeholder={activeLang === 'en' ? 'Describe the work done' : activeLang === 'hy' ? 'Նdelays delays delays delays' : 'Опишите выполненную работу'}
                       rows={3}
                     />
                   </div>
@@ -1192,7 +1216,7 @@ export default function AdminPanel() {
                       <div className="aspect-video bg-gray-100 overflow-hidden">
                         <img 
                           src={sample.imageUrl} 
-                          alt={sample.title}
+                          alt={sample.title.en}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" fill="%23f1f5f9"%3E%3Crect width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="18" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
@@ -1208,8 +1232,8 @@ export default function AdminPanel() {
                                 {service.title}
                               </span>
                             )}
-                            <h3 className="font-semibold text-gray-900">{sample.title}</h3>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{sample.description}</p>
+                            <h3 className="font-semibold text-gray-900">{sample.title.en}</h3>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{sample.description.en}</p>
                           </div>
                           <div className="flex flex-col gap-1">
                             <button

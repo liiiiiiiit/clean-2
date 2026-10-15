@@ -389,13 +389,13 @@ function App() {
             <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-50 to-blue-50 rounded-full mb-4 border border-sky-100">
                 <span className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-sky-700">نمونه کارهای ما</span>
+                <span className="text-sm font-medium text-sky-700">{t.samples.title}</span>
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                نمونه کارهای ما
+                {t.samples.title}
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                کیفیت خدمات نظافتی ما را از طریق پروژه‌های اخیر مشاهده کنید
+                {t.samples.subtitle}
               </p>
             </div>
 
@@ -412,7 +412,7 @@ function App() {
                     <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                       <img 
                         src={sample.imageUrl} 
-                        alt={sample.title}
+                        alt={sample.title[lang]}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" fill="%23f1f5f9"%3E%3Crect width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="18" fill="%2394a3b8"%3Eتصویر موجود نیست%3C/text%3E%3C/svg%3E';
@@ -436,10 +436,10 @@ function App() {
                     {/* Content */}
                     <div className="p-6">
                       <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-sky-600 transition-colors">
-                        {sample.title}
+                        {sample.title[lang]}
                       </h3>
                       <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
-                        {sample.description}
+                        {sample.description[lang]}
                       </p>
                       
                       {/* Date */}
@@ -448,7 +448,7 @@ function App() {
                           {new Date(sample.createdAt).toLocaleDateString('fa-IR')}
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-600 group-hover:gap-2 transition-all">
-                          مشاهده جزئیات
+                          {t.samples.viewDetails}
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
