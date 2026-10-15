@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { translations, Language } from './translations';
 import emailjs from '@emailjs/browser';
+import { supabase } from './lib/supabase';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -29,7 +30,24 @@ function App() {
     setIsSubmitting(true);
 
     try {
-      // EmailJS configuration - Replace these with your actual values
+      // Save to Supabase database
+      const { error: supabaseError } = await supabase
+        .from('contact_requests')
+        .insert([
+          {
+            name: formData.name,
+            phone: formData.phone,
+            service: formData.service,
+            message: formData.message,
+            status: 'new'
+          }
+        ]);
+
+      if (supabaseError) throw supabaseError;
+
+      // Optional: Also send email via EmailJS
+      // Uncomment and configure if you want email notifications
+      /*
       const SERVICE_ID = 'YOUR_SERVICE_ID';
       const TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
       const PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
@@ -39,15 +57,16 @@ function App() {
         from_phone: formData.phone,
         service_type: formData.service,
         message: formData.message,
-        to_email: 'your-email@example.com', // Replace with your email
+        to_email: 'your-email@example.com',
       }, PUBLIC_KEY);
+      */
 
       setFormSubmitted(true);
       setFormData({ name: '', phone: '', service: '', message: '' });
       setTimeout(() => setFormSubmitted(false), 4000);
     } catch (error) {
-      console.error('Email send failed:', error);
-      alert('Failed to send message. Please try again or call us directly.');
+      console.error('Submission failed:', error);
+      alert('Failed to send message. Please try again or call us directly at +374 77 442554.');
     } finally {
       setIsSubmitting(false);
     }
