@@ -19,8 +19,21 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  DollarSign,
+  Briefcase,
+  Image,
+  Plus,
+  Edit2,
+  Save,
+  X
 } from 'lucide-react';
+import { 
+  getServices, saveServices, addService, updateService, deleteService,
+  getPricing, savePricing, updatePricingRate,
+  getWorkSamples, addWorkSample, updateWorkSample, deleteWorkSample,
+  type Service, type PricingRate, type WorkSample
+} from '../lib/dataStore';
 
 interface ContactRequest {
   id: string;
@@ -77,7 +90,7 @@ const setLoggedIn = (value: boolean) => {
   }
 };
 
-type TabType = 'dashboard' | 'requests' | 'password';
+type TabType = 'dashboard' | 'requests' | 'services' | 'pricing' | 'samples' | 'password';
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -94,6 +107,21 @@ export default function AdminPanel() {
   const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Services state
+  const [services, setServices] = useState<Service[]>([]);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [serviceForm, setServiceForm] = useState({ key: '', title: '', description: '', icon: '🧹', color: 'from-sky-50 to-blue-50', iconBg: 'from-sky-400 to-blue-500' });
+
+  // Pricing state
+  const [pricing, setPricing] = useState<PricingRate[]>([]);
+
+  // Work Samples state
+  const [workSamples, setWorkSamples] = useState<WorkSample[]>([]);
+  const [showSampleForm, setShowSampleForm] = useState(false);
+  const [editingSample, setEditingSample] = useState<WorkSample | null>(null);
+  const [sampleForm, setSampleForm] = useState({ title: '', description: '', imageUrl: '', serviceType: '' });
+
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -107,10 +135,13 @@ export default function AdminPanel() {
     }
   }, []);
 
-  // Load requests when authenticated
+  // Load data when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       setRequests(getRequests());
+      setServices(getServices());
+      setPricing(getPricing());
+      setWorkSamples(getWorkSamples());
     }
   }, [isAuthenticated]);
 
@@ -120,6 +151,9 @@ export default function AdminPanel() {
 
     const interval = setInterval(() => {
       setRequests(getRequests());
+      setServices(getServices());
+      setPricing(getPricing());
+      setWorkSamples(getWorkSamples());
     }, 3000);
 
     return () => clearInterval(interval);
@@ -195,6 +229,92 @@ export default function AdminPanel() {
       setNewPassword('');
       setConfirmPassword('');
     }
+  };
+
+  // Service handlers
+  const handleAddService = () => {
+    if (!serviceForm.key || !serviceForm.title || !serviceForm.description) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    addService(serviceForm);
+    setServices(getServices());
+    setServiceForm({ key: '', title: '', description: '', icon: '🧹', color: 'from-sky-50 to-blue-50', iconBg: 'from-sky-400 to-blue-500' });
+    setShowServiceForm(false);
+  };
+
+  const handleUpdateService = () => {
+    if (!editingService) return;
+    updateService(editingService.id, serviceForm);
+    setServices(getServices());
+    setEditingService(null);
+    setShowServiceForm(false);
+    setServiceForm({ key: '', title: '', description: '', icon: '🧹', color: 'from-sky-50 to-blue-50', iconBg: 'from-sky-400 to-blue-500' });
+  };
+
+  const handleDeleteService = (id: string) => {
+    if (confirm('Are you sure you want to delete this service?')) {
+      deleteService(id);
+      setServices(getServices());
+    }
+  };
+
+  const handleEditService = (service: Service) => {
+    setEditingService(service);
+    setServiceForm({
+      key: service.key,
+      title: service.title,
+      description: service.description,
+      icon: service.icon,
+      color: service.color,
+      iconBg: service.iconBg,
+    });
+    setShowServiceForm(true);
+  };
+
+  // Pricing handlers
+  const handleUpdatePricing = (serviceKey: string, rate: number) => {
+    updatePricingRate(serviceKey, rate);
+    setPricing(getPricing());
+  };
+
+  // Work Sample handlers
+  const handleAddSample = () => {
+    if (!sampleForm.title || !sampleForm.description || !sampleForm.imageUrl || !sampleForm.serviceType) {
+      alert('Please fill in all fields');
+      return;
+    }
+    addWorkSample(sampleForm);
+    setWorkSamples(getWorkSamples());
+    setSampleForm({ title: '', description: '', imageUrl: '', serviceType: '' });
+    setShowSampleForm(false);
+  };
+
+  const handleUpdateSample = () => {
+    if (!editingSample) return;
+    updateWorkSample(editingSample.id, sampleForm);
+    setWorkSamples(getWorkSamples());
+    setEditingSample(null);
+    setShowSampleForm(false);
+    setSampleForm({ title: '', description: '', imageUrl: '', serviceType: '' });
+  };
+
+  const handleDeleteSample = (id: string) => {
+    if (confirm('Are you sure you want to delete this work sample?')) {
+      deleteWorkSample(id);
+      setWorkSamples(getWorkSamples());
+    }
+  };
+
+  const handleEditSample = (sample: WorkSample) => {
+    setEditingSample(sample);
+    setSampleForm({
+      title: sample.title,
+      description: sample.description,
+      imageUrl: sample.imageUrl,
+      serviceType: sample.serviceType,
+    });
+    setShowSampleForm(true);
   };
 
   // Update request status
@@ -400,6 +520,39 @@ export default function AdminPanel() {
                   {stats.new}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => setActiveTab('services')}
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                activeTab === 'services'
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Briefcase className="w-4 h-4" />
+              Services
+            </button>
+            <button
+              onClick={() => setActiveTab('pricing')}
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                activeTab === 'pricing'
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              Pricing
+            </button>
+            <button
+              onClick={() => setActiveTab('samples')}
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                activeTab === 'samples'
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Image className="w-4 h-4" />
+              Work Samples
             </button>
             <button
               onClick={() => setActiveTab('password')}
@@ -648,6 +801,346 @@ export default function AdminPanel() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ============ SERVICES TAB ============ */}
+        {activeTab === 'services' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Manage Services</h2>
+              <button
+                onClick={() => { setShowServiceForm(true); setEditingService(null); setServiceForm({ key: '', title: '', description: '', icon: '🧹', color: 'from-sky-50 to-blue-50', iconBg: 'from-sky-400 to-blue-500' }); }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Service
+              </button>
+            </div>
+
+            {/* Service Form */}
+            {showServiceForm && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingService ? 'Edit Service' : 'Add New Service'}</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Service Key (unique identifier)</label>
+                    <input
+                      type="text"
+                      value={serviceForm.key}
+                      onChange={(e) => setServiceForm({ ...serviceForm, key: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="e.g., office, home, deep"
+                      disabled={!!editingService}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={serviceForm.title}
+                      onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="e.g., Office Cleaning"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                      value={serviceForm.description}
+                      onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="Service description"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Icon (emoji)</label>
+                    <input
+                      type="text"
+                      value={serviceForm.icon}
+                      onChange={(e) => setServiceForm({ ...serviceForm, icon: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="🏢"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+                    <select
+                      value={serviceForm.color}
+                      onChange={(e) => setServiceForm({ ...serviceForm, color: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                    >
+                      <option value="from-sky-50 to-blue-50">Sky Blue</option>
+                      <option value="from-emerald-50 to-teal-50">Emerald</option>
+                      <option value="from-violet-50 to-purple-50">Violet</option>
+                      <option value="from-amber-50 to-orange-50">Amber</option>
+                      <option value="from-rose-50 to-pink-50">Rose</option>
+                      <option value="from-cyan-50 to-sky-50">Cyan</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Icon Background</label>
+                    <select
+                      value={serviceForm.iconBg}
+                      onChange={(e) => setServiceForm({ ...serviceForm, iconBg: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                    >
+                      <option value="from-sky-400 to-blue-500">Sky Blue</option>
+                      <option value="from-emerald-400 to-teal-500">Emerald</option>
+                      <option value="from-violet-400 to-purple-500">Violet</option>
+                      <option value="from-amber-400 to-orange-500">Amber</option>
+                      <option value="from-rose-400 to-pink-500">Rose</option>
+                      <option value="from-cyan-400 to-sky-500">Cyan</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={editingService ? handleUpdateService : handleAddService}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all"
+                  >
+                    <Save className="w-4 h-4" />
+                    {editingService ? 'Update Service' : 'Add Service'}
+                  </button>
+                  <button
+                    onClick={() => { setShowServiceForm(false); setEditingService(null); }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Services List */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {services.map((service) => (
+                <div key={service.id} className={`bg-gradient-to-br ${service.color} rounded-2xl p-6 border border-white/60`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-14 h-14 bg-gradient-to-br ${service.iconBg} rounded-xl flex items-center justify-center text-2xl shadow-lg`}>
+                        {service.icon}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">{service.title}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                        <p className="text-xs text-gray-500 mt-2">Key: {service.key}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditService(service)}
+                        className="p-2 bg-white/80 hover:bg-white rounded-lg transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteService(service.id)}
+                        className="p-2 bg-white/80 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ============ PRICING TAB ============ */}
+        {activeTab === 'pricing' && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Manage Pricing</h2>
+            <p className="text-gray-600 mb-6">Set the price per square meter for each service type.</p>
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="divide-y divide-gray-100">
+                {services.map((service) => {
+                  const rate = pricing.find(p => p.serviceKey === service.key)?.ratePerSqm || 0;
+                  return (
+                    <div key={service.id} className="p-5 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 bg-gradient-to-br ${service.iconBg} rounded-xl flex items-center justify-center text-xl shadow-md`}>
+                            {service.icon}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{service.title}</h3>
+                            <p className="text-sm text-gray-500">Price per square meter (AMD)</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="number"
+                            value={rate}
+                            onChange={(e) => handleUpdatePricing(service.key, Number(e.target.value))}
+                            className="w-32 px-4 py-2 border border-gray-200 rounded-xl text-right font-semibold text-lg focus:ring-2 focus:ring-sky-500 outline-none"
+                            min={0}
+                          />
+                          <span className="text-sm text-gray-500 font-medium">AMD/sq.m</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-6 bg-sky-50 rounded-2xl p-5 border border-sky-100">
+              <p className="text-sm text-sky-700">
+                💡 <strong>Tip:</strong> Changes are saved automatically. The pricing calculator on the website will update in real-time.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ============ WORK SAMPLES TAB ============ */}
+        {activeTab === 'samples' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Work Samples</h2>
+              <button
+                onClick={() => { setShowSampleForm(true); setEditingSample(null); setSampleForm({ title: '', description: '', imageUrl: '', serviceType: services[0]?.key || '' }); }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Sample
+              </button>
+            </div>
+
+            {/* Sample Form */}
+            {showSampleForm && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingSample ? 'Edit Work Sample' : 'Add New Work Sample'}</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={sampleForm.title}
+                      onChange={(e) => setSampleForm({ ...sampleForm, title: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="e.g., Office Deep Clean"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                    <select
+                      value={sampleForm.serviceType}
+                      onChange={(e) => setSampleForm({ ...sampleForm, serviceType: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                    >
+                      {services.map((s) => (
+                        <option key={s.id} value={s.key}>{s.icon} {s.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                      value={sampleForm.description}
+                      onChange={(e) => setSampleForm({ ...sampleForm, description: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="Describe the work done"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                    <input
+                      type="url"
+                      value={sampleForm.imageUrl}
+                      onChange={(e) => setSampleForm({ ...sampleForm, imageUrl: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    {sampleForm.imageUrl && (
+                      <div className="mt-3 aspect-video max-w-sm rounded-xl overflow-hidden bg-gray-100">
+                        <img src={sampleForm.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={editingSample ? handleUpdateSample : handleAddSample}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-sky-600 hover:to-blue-700 transition-all"
+                  >
+                    <Save className="w-4 h-4" />
+                    {editingSample ? 'Update Sample' : 'Add Sample'}
+                  </button>
+                  <button
+                    onClick={() => { setShowSampleForm(false); setEditingSample(null); }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Work Samples List */}
+            {workSamples.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Image className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No work samples yet</h3>
+                <p className="text-gray-500">Add your first work sample to showcase your cleaning projects.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workSamples.map((sample) => {
+                  const service = services.find(s => s.key === sample.serviceType);
+                  return (
+                    <div key={sample.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="aspect-video bg-gray-100 overflow-hidden">
+                        <img 
+                          src={sample.imageUrl} 
+                          alt={sample.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" fill="%23f1f5f9"%3E%3Crect width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="18" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            {service && (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${service.color} mb-2`}>
+                                <span>{service.icon}</span>
+                                {service.title}
+                              </span>
+                            )}
+                            <h3 className="font-semibold text-gray-900">{sample.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{sample.description}</p>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => handleEditSample(sample)}
+                              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-gray-600" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSample(sample.id)}
+                              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

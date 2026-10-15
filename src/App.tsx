@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { translations, Language } from './translations';
 import AdminPanel from './pages/AdminPanel';
+import { getServices, getPricing, getWorkSamples, type Service, type WorkSample } from './lib/dataStore';
 
 function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -13,6 +14,9 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', service: '', message: '' });
   const [showAdmin, setShowAdmin] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [pricingRates, setPricingRates] = useState<Record<string, number>>({});
+  const [workSamples, setWorkSamples] = useState<WorkSample[]>([]);
 
   const t = translations[lang];
 
@@ -34,8 +38,40 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const pricingRates: Record<string, number> = { office: 500, home: 400, commercial: 350, deep: 800 };
-  const calculatedPrice = pricingRates[serviceType] * area;
+  // Load dynamic data from localStorage
+  useEffect(() => {
+    const loadData = () => {
+      const loadedServices = getServices();
+      const loadedPricing = getPricing();
+      const loadedSamples = getWorkSamples();
+      
+      setServices(loadedServices);
+      
+      // Convert pricing array to object
+      const pricingObj: Record<string, number> = {};
+      loadedPricing.forEach(p => {
+        pricingObj[p.serviceKey] = p.ratePerSqm;
+      });
+      setPricingRates(pricingObj);
+      
+      setWorkSamples(loadedSamples);
+    };
+
+    loadData();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', loadData);
+    
+    // Also check periodically for changes from admin panel
+    const interval = setInterval(loadData, 2000);
+    
+    return () => {
+      window.removeEventListener('storage', loadData);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const calculatedPrice = pricingRates[serviceType] ? pricingRates[serviceType] * area : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,18 +292,13 @@ function App() {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">{t.services.subtitle}</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-            {[
-              { ...t.services.office, icon: '🏢', color: 'from-sky-50 to-blue-50', iconBg: 'from-sky-400 to-blue-500' },
-              { ...t.services.home, icon: '🏠', color: 'from-emerald-50 to-teal-50', iconBg: 'from-emerald-400 to-teal-500' },
-              { ...t.services.commercial, icon: '🏪', color: 'from-violet-50 to-purple-50', iconBg: 'from-violet-400 to-purple-500' },
-              { ...t.services.deep, icon: '🧹', color: 'from-amber-50 to-orange-50', iconBg: 'from-amber-400 to-orange-500' },
-            ].map((service, index) => (
-              <div key={index} className={`bg-gradient-to-br ${service.color} rounded-3xl p-8 border border-white/60 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1`}>
+            {services.map((service) => (
+              <div key={service.id} className={`bg-gradient-to-br ${service.color} rounded-3xl p-8 border border-white/60 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1`}>
                 <div className={`w-16 h-16 bg-gradient-to-br ${service.iconBg} rounded-2xl flex items-center justify-center mb-6 shadow-lg text-3xl`}>
                   {service.icon}
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
-                <p className="text-gray-600 mb-6">{service.desc}</p>
+                <p className="text-gray-600 mb-6">{service.description}</p>
                 <a href="#contact" className="text-sm font-semibold text-sky-600 hover:text-sky-700">Book Now →</a>
               </div>
             ))}
@@ -336,6 +367,52 @@ function App() {
           </div>
         </div>
       </section>
+
+      {/* Work Samples Section */}
+      {workSamples.length > 0 && (
+        <section id="samples" className="py-20 lg:py-28 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 rounded-full mb-4">
+                <span className="w-2 h-2 bg-sky-500 rounded-full" />
+                <span className="text-sm font-medium text-sky-700">Our Work</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Work Samples</h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">See the quality of our cleaning services through our recent projects.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {workSamples.map((sample) => {
+                const service = services.find(s => s.key === sample.serviceType);
+                return (
+                  <div key={sample.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+                    <div className="aspect-video overflow-hidden bg-gray-100">
+                      <img 
+                        src={sample.imageUrl} 
+                        alt={sample.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" fill="%23f1f5f9"%3E%3Crect width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="18" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    </div>
+                    <div className="p-5">
+                      {service && (
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${service.color} mb-3`}>
+                          <span>{service.icon}</span>
+                          {service.title}
+                        </span>
+                      )}
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">{sample.title}</h3>
+                      <p className="text-sm text-gray-600">{sample.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Contact Section */}
       <section id="contact" className="py-20 lg:py-28 bg-gray-50">
