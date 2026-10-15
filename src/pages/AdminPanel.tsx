@@ -1,5 +1,26 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { 
+  Shield, 
+  LayoutDashboard, 
+  ClipboardList, 
+  KeyRound, 
+  LogOut, 
+  Phone, 
+  MessageCircle,
+  Bell,
+  CheckCircle2,
+  Trash2,
+  Search,
+  ChevronRight,
+  Inbox,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Sparkles
+} from 'lucide-react';
 
 interface ContactRequest {
   id: string;
@@ -65,6 +86,7 @@ export default function AdminPanel() {
   // Login state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   // Requests state
@@ -233,8 +255,17 @@ export default function AdminPanel() {
 
         <div className="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-sky-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-sky-200">
-              <span className="text-white text-3xl">✨</span>
+            <div className="relative mx-auto mb-6 w-24 h-24">
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-400 to-blue-600 rounded-3xl blur-xl opacity-40 animate-pulse" />
+              {/* Main icon container */}
+              <div className="relative w-24 h-24 bg-gradient-to-br from-sky-400 via-blue-500 to-blue-700 rounded-3xl flex items-center justify-center shadow-2xl shadow-sky-300/50">
+                <Shield className="w-12 h-12 text-white" strokeWidth={1.8} />
+              </div>
+              {/* Floating badge */}
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white">
+                <Lock className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Staff Portal</h1>
             <p className="text-gray-500 mt-1">Shine Cleaning Admin Panel</p>
@@ -243,27 +274,40 @@ export default function AdminPanel() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => { setUsername(e.target.value); setLoginError(''); }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter username"
-                autoFocus
-                required
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setLoginError(''); }}
+                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition-all"
+                  placeholder="Enter username"
+                  autoFocus
+                  required
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter password"
-                required
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
+                  className="w-full pl-11 pr-11 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition-all"
+                  placeholder="Enter password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -283,8 +327,9 @@ export default function AdminPanel() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-            <a href="#home" className="text-sm text-gray-500 hover:text-sky-600 flex items-center gap-1 justify-center">
-              ← Back to Website
+            <a href="#home" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-sky-600 transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Website
             </a>
           </div>
         </div>
@@ -300,8 +345,8 @@ export default function AdminPanel() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-sm">✨</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-sky-200">
+                <Shield className="w-5 h-5 text-white" strokeWidth={2} />
               </div>
               <div>
                 <h1 className="text-lg font-bold text-gray-900">Admin Panel</h1>
@@ -309,14 +354,16 @@ export default function AdminPanel() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <a href="#home" className="text-sm text-gray-500 hover:text-sky-600 hidden sm:inline">
-                View Website
+              <a href="#home" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-sky-600 hidden sm:inline transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                Website
               </a>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
               >
-                Log Out
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Log Out</span>
               </button>
             </div>
           </div>
@@ -329,33 +376,41 @@ export default function AdminPanel() {
           <div className="flex gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-sky-500 text-sky-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              📊 Dashboard
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
             </button>
             <button
               onClick={() => setActiveTab('requests')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
                 activeTab === 'requests'
                   ? 'border-sky-500 text-sky-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              📋 Requests {stats.new > 0 && `(${stats.new})`}
+              <ClipboardList className="w-4 h-4" />
+              Requests
+              {stats.new > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-sky-100 text-sky-700 text-xs font-semibold rounded-full">
+                  {stats.new}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('password')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
                 activeTab === 'password'
                   ? 'border-sky-500 text-sky-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              🔒 Password & Security
+              <KeyRound className="w-4 h-4" />
+              Password & Security
             </button>
           </div>
         </div>
@@ -369,40 +424,48 @@ export default function AdminPanel() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500">Total</p>
                     <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
                   </div>
-                  <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center text-xl">📊</div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                    <ClipboardList className="w-6 h-6 text-sky-600" />
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500">New</p>
                     <p className="text-3xl font-bold text-blue-600">{stats.new}</p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-xl">🔔</div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                    <Bell className="w-6 h-6 text-blue-600" />
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500">Contacted</p>
                     <p className="text-3xl font-bold text-amber-600">{stats.contacted}</p>
                   </div>
-                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-xl">📞</div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
+                    <Phone className="w-6 h-6 text-amber-600" />
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500">Completed</p>
                     <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
                   </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-xl">✅</div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-green-600" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -414,8 +477,10 @@ export default function AdminPanel() {
               </div>
               {requests.slice(0, 5).length === 0 ? (
                 <div className="p-12 text-center">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">📭</div>
-                  <p className="text-gray-500">No requests yet</p>
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Inbox className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 font-medium">No requests yet</p>
                   <p className="text-sm text-gray-400 mt-2">Submit the contact form to see requests here</p>
                 </div>
               ) : (
@@ -449,9 +514,10 @@ export default function AdminPanel() {
                 <div className="p-4 border-t border-gray-100 text-center">
                   <button
                     onClick={() => setActiveTab('requests')}
-                    className="text-sm text-sky-600 hover:text-sky-700 font-medium"
+                    className="inline-flex items-center gap-1 text-sm text-sky-600 hover:text-sky-700 font-medium transition-colors"
                   >
-                    View all requests →
+                    View all requests
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               )}
@@ -482,13 +548,14 @@ export default function AdminPanel() {
                     </button>
                   ))}
                 </div>
-                <div className="flex-1 sm:ml-auto">
+                <div className="flex-1 sm:ml-auto relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="🔍 Search by name, phone, or message..."
+                    placeholder="Search by name, phone, or message..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full sm:w-64 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-300 outline-none"
+                    className="w-full sm:w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-300 outline-none"
                   />
                 </div>
               </div>
@@ -498,7 +565,9 @@ export default function AdminPanel() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               {filteredRequests.length === 0 ? (
                 <div className="p-16 text-center">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">📭</div>
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Inbox className="w-10 h-10 text-gray-400" />
+                  </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">No requests found</h3>
                   <p className="text-gray-500 text-sm">Try adjusting your filters or search query.</p>
                 </div>
@@ -538,17 +607,19 @@ export default function AdminPanel() {
                           <div className="flex gap-2 flex-wrap">
                             <a
                               href={`tel:${request.phone}`}
-                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
                             >
-                              📞 Call
+                              <Phone className="w-4 h-4" />
+                              Call
                             </a>
                             <a
                               href={`https://wa.me/${request.phone.replace(/[^0-9]/g, '')}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-100"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-100 transition-colors"
                             >
-                              💬 WhatsApp
+                              <MessageCircle className="w-4 h-4" />
+                              WhatsApp
                             </a>
                           </div>
                         </div>
@@ -565,9 +636,10 @@ export default function AdminPanel() {
                           </select>
                           <button
                             onClick={() => deleteRequest(request.id)}
-                            className="px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           >
-                            🗑️ Delete
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
                           </button>
                         </div>
                       </div>
